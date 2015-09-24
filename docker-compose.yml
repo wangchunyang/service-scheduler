@@ -1,0 +1,38 @@
+repl-1:
+    image: docker.hos.hpecorp.net/chunyang/official-images-replication:hack-latest
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+        - "9001:8000"
+    environment:
+        - USERNAME=docker.registry@hp.com
+        - PASSWORD=CHANGEME
+        - SERVER_MODE=true
+        - DISCOVERY_ETCD_URLS=http://172.16.1.104:2379,http://172.16.1.105:2379
+        - DISCOVERY_SERVICE_KEY=/services/repl-1
+        - DISCOVERY_SERVICE_URL=http://172.16.1.104:9001/api/1.0/replicate?filter=list&repos=busybox
+
+repl-2:
+    image: docker.hos.hpecorp.net/chunyang/official-images-replication:hack-latest
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+        - "9002:8000"
+    environment:
+        - USERNAME=docker.registry@hp.com
+        - PASSWORD=CHANGEME
+        - SERVER_MODE=true
+        - DISCOVERY_ETCD_URLS=http://172.16.1.104:2379,http://172.16.1.105:2379
+        - DISCOVERY_SERVICE_KEY=/services/repl-2
+        - DISCOVERY_SERVICE_URL=http://172.16.1.104:9002/api/1.0/replicate?filter=list&repos=centos
+
+sche:
+    image: docker.hos.hpecorp.net/chunyang/service-scheduler:hack-latest
+    ports:
+        - "8001:8000"
+    environment:
+        - DISCOVERY_ETCD_URLS=http://172.16.1.104:2379,http://172.16.1.105:2379
+        - DISCOVERY_SERVICE_DIR=/services
+    links:
+        - repl-1
+        - repl-2
